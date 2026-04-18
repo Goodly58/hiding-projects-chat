@@ -14,7 +14,7 @@ Project chats remain fully accessible from inside each Project page — they're 
 
 ### From Firefox Add-ons (recommended)
 
-*(link will go here once AMO signs it)*
+https://addons.mozilla.org/en-US/firefox/addon/hiding-claude-projects-chat/
 
 ### Temporary (for development)
 
