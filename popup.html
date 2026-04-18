@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hiding Projects Chat</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #141414;
+      --fg: #ececec;
+      --muted: #8a8a8a;
+      --accent: #4ea1ff;
+      --border: #262626;
+      --field-bg: #1e1e1e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 300px; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font: 13px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif;
+      padding: 18px 20px 20px;
+    }
+    h1 { font-size: 14px; font-weight: 600; }
+    .tag {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .section {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    label.field {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--field-bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font: inherit;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+    select:disabled { opacity: .5; cursor: not-allowed; }
+    .project-row { margin-top: 12px; }
+    .project-row.hidden { display: none; }
+    .hint {
+      margin-top: 12px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .status {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <h1>Hiding Projects Chat</h1>
+  <span class="tag">for claude.ai</span>
+
+  <div class="section">
+    <label class="field" for="mode">Mode</label>
+    <select id="mode">
+      <option value="off">Off — show everything</option>
+      <option value="hideProjects" selected>Hide project chats</option>
+      <option value="focusProject">Focus on one project</option>
+    </select>
+
+    <div class="project-row hidden" id="projectRow">
+      <label class="field" for="project" style="margin-top: 12px;">Project</label>
+      <select id="project"><option>Loading…</option></select>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <p class="hint" id="hint">
+    Chats that belong to a Project are hidden from the main sidebar.
+    They remain accessible from inside each Project.
+  </p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

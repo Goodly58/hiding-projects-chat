@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Hiding Projects Chat",
+  "version": "1.1.0",
+  "description": "Declutter Claude's sidebar — hide project chats, or focus on a single project.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hiding-projects-chat@goodly",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://claude.ai/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}
