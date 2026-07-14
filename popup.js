@@ -31,7 +31,9 @@
     if (m) return m[1];
     const r = await fetch('https://claude.ai/api/organizations', { credentials: 'include' });
     const orgs = await r.json();
-    return Array.isArray(orgs) ? orgs[0]?.uuid ?? null : null;
+    if (!Array.isArray(orgs)) return null;
+    const chatOrg = orgs.find(o => o?.capabilities?.includes?.('chat'));
+    return (chatOrg || orgs[0])?.uuid ?? null;
   }
 
   async function fetchProjects() {
