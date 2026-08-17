@@ -1,0 +1,292 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root{
+    --bg:#1a1815; --side:#141210; --line:#2b2724; --fg:#ece9e4;
+    --muted:#8b837a; --faint:#5f5852; --accent:#d97757; --card:#211e1b;
+    --pop:#1b1917; --popline:#312d29;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d0c0b;font-family:"Segoe UI",system-ui,-apple-system,sans-serif}
+
+  #stage{position:relative;width:980px;height:600px;background:var(--bg);overflow:hidden}
+
+  /* ---------- sidebar ---------- */
+  .side{position:absolute;left:0;top:0;bottom:0;width:236px;background:var(--side);
+        border-right:1px solid var(--line);padding:16px 12px}
+  .brand{font-family:Georgia,"Times New Roman",serif;font-size:19px;color:var(--fg);
+         padding:0 8px 16px;letter-spacing:.01em}
+  .nav{display:flex;align-items:center;gap:10px;height:32px;padding:0 9px;border-radius:7px;
+       font-size:13px;color:#cfc9c2}
+  .nav.sel{background:#242120;color:var(--fg)}
+  .nav .ic{width:13px;height:13px;border:1.4px solid var(--faint);border-radius:3px;flex:none}
+  .nav.new .ic{border-color:var(--accent);border-radius:50%;position:relative}
+  .nav.new .ic::after{content:"";position:absolute;inset:3px;background:var(--accent);border-radius:50%}
+  .seclabel{font-size:10.5px;color:var(--faint);padding:16px 9px 6px;letter-spacing:.04em}
+
+  .row{display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:6px;
+       font-size:12.5px;color:#c8c2ba;white-space:nowrap;overflow:hidden;
+       transition:opacity .18s linear}
+  .row .d{width:4px;height:4px;border-radius:50%;background:var(--faint);flex:none}
+  .row.gone{display:none}
+  .row.fade{opacity:.22}
+  .row.add{color:var(--fg)}
+  .row.add .d{background:var(--accent)}
+
+  /* ---------- main ---------- */
+  .main{position:absolute;left:236px;right:0;top:0;bottom:0;padding:34px 40px}
+  .h1{font-family:Georgia,serif;font-size:24px;color:var(--fg);margin-bottom:18px}
+  .search{height:38px;border:1px solid var(--line);border-radius:9px;background:#171513;
+          display:flex;align-items:center;padding:0 13px;gap:9px;font-size:13px;color:var(--faint)}
+  .count{font-size:12px;color:var(--muted);margin:14px 2px 12px}
+  .count b{color:var(--fg);font-weight:600}
+  .card{border:1px solid var(--line);background:var(--card);border-radius:9px;
+        padding:11px 14px;margin-bottom:9px;transition:opacity .18s linear}
+  .card .t{font-size:13.5px;color:var(--fg);margin-bottom:3px}
+  .card .m{font-size:11.5px;color:var(--muted)}
+  .card .m em{font-style:normal;color:var(--accent)}
+  .card.gone{display:none}
+  .card.fade{opacity:.22}
+
+  /* ---------- popup ---------- */
+  .pop{position:absolute;right:38px;top:22px;width:252px;background:var(--pop);
+       border:1px solid var(--popline);border-radius:11px;padding:15px 16px 16px;
+       box-shadow:0 18px 46px rgba(0,0,0,.62)}
+  .pop .bar{display:flex;gap:5px;margin-bottom:12px}
+  .pop .bar i{width:8px;height:8px;border-radius:50%;background:#39332f}
+  .pop .bar i:first-child{background:var(--accent)}
+  .pop h3{font-size:13px;color:var(--fg);font-weight:650;margin-bottom:2px}
+  .pop .tag{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+  .pop .fld{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+            margin:14px 0 6px}
+  .sel{height:33px;border:1px solid var(--popline);border-radius:7px;background:#232019;
+       display:flex;align-items:center;justify-content:space-between;padding:0 11px;
+       font-size:12.5px;color:var(--fg)}
+  .sel.hot{border-color:var(--accent)}
+  .sel .car{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+            border-top:5px solid var(--muted)}
+  .opts{margin-top:5px;border:1px solid var(--popline);border-radius:7px;background:#232019;
+        overflow:hidden}
+  .opt{height:30px;display:flex;align-items:center;padding:0 11px;font-size:12.5px;color:#cfc9c2}
+  .opt.on{background:#2f2a22;color:var(--fg)}
+  .opt.hl{background:var(--accent);color:#1a1512;font-weight:600}
+  .hint{font-size:10.5px;line-height:1.5;color:var(--muted);margin-top:12px}
+  .status{font-size:10px;color:var(--accent);margin-top:7px}
+
+  /* ---------- cursor ---------- */
+  #cur{position:absolute;width:20px;height:20px;pointer-events:none;z-index:50;
+       transition:left .13s ease-out, top .13s ease-out}
+  #cur svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}
+  #ring{position:absolute;width:34px;height:34px;border:2px solid var(--accent);
+        border-radius:50%;opacity:0;z-index:49;transform:translate(-8px,-8px)}
+  #ring.pulse{opacity:.85;width:20px;height:20px;transform:translate(-1px,-1px)}
+
+  /* caption strip */
+  .cap{position:absolute;left:236px;right:0;bottom:0;height:34px;background:#100f0d;
+       border-top:1px solid var(--line);display:flex;align-items:center;padding:0 40px;
+       font-size:11.5px;color:var(--muted);letter-spacing:.01em}
+  .cap b{color:var(--accent);font-weight:650;margin-right:7px;text-transform:uppercase;
+         letter-spacing:.09em;font-size:9.5px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="side">
+    <div class="brand">Claude</div>
+    <div class="nav new"><i class="ic"></i>New chat</div>
+    <div class="nav sel"><i class="ic"></i>Chats</div>
+    <div class="nav"><i class="ic"></i>Projects</div>
+    <div class="nav"><i class="ic"></i>Artifacts</div>
+    <div class="seclabel">Recents</div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="main">
+    <div class="h1">Your chat history</div>
+    <div class="search"><span>&#9906;</span><span>Search your chats&hellip;</span></div>
+    <div class="count"><b id="cnt">6</b> chats with Claude</div>
+    <div id="cards"></div>
+  </div>
+
+  <div class="pop">
+    <div class="bar"><i></i><i></i><i></i></div>
+    <h3>Hiding Projects Chat</h3>
+    <div class="tag">for claude.ai</div>
+    <div class="fld">Mode</div>
+    <div class="sel" id="sel"><span id="selv">Off &mdash; show everything</span><i class="car"></i></div>
+    <div id="optbox"></div>
+    <div id="prow" style="display:none">
+      <div class="fld">Project</div>
+      <div class="sel"><span id="pv">Select a project&hellip;</span><i class="car"></i></div>
+      <div class="status" id="pstat">Pick a project &mdash; nothing is hidden until you do.</div>
+    </div>
+    <div class="hint" id="hint">All chats are shown. The extension is paused.</div>
+  </div>
+
+  <div class="cap"><b id="capk">Off</b><span id="capt">Every chat competes for space.</span></div>
+
+  <div id="ring"></div>
+  <div id="cur">
+    <svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 1 L2 15.5 L6 12 L8.6 17.6 L11.2 16.4 L8.6 11 L13.6 11 Z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<script>
+const CHATS = [
+  {t:"Weekly meal prep ideas",   p:null,       ago:"2 minutes ago"},
+  {t:"Chapter 3 outline",        p:"Thesis",   ago:"14 minutes ago"},
+  {t:"Fixing the kitchen tap",   p:null,       ago:"1 hour ago"},
+  {t:"Literature review notes",  p:"Thesis",   ago:"3 hours ago"},
+  {t:"Rate card draft",          p:"Freelance",ago:"yesterday"},
+  {t:"Trip packing list",        p:null,       ago:"yesterday"},
+];
+// chats the real sidebar never rendered — focus mode adds these back
+const EXTRA = [
+  {t:"Survey questions v2",      p:"Thesis",   ago:"2 days ago"},
+  {t:"Interview transcripts",    p:"Thesis",   ago:"4 days ago"},
+];
+
+const HINTS = {
+  off:   "All chats are shown. The extension is paused.",
+  hide:  "Chats that belong to a Project are hidden from the main sidebar. They remain accessible from inside each Project.",
+  focus: "Only chats from the selected Project appear in the sidebar. Everything else is hidden."
+};
+const LABEL = {off:"Off &mdash; show everything", hide:"Hide project chats", focus:"Focus on one project"};
+const CAP = {
+  off:   ["Off","Every chat competes for space."],
+  hide:  ["Hide project chats","Project chats leave the sidebar — they stay inside each Project."],
+  focus: ["Focus on one project","Only Thesis chats remain, including ones the sidebar never rendered."],
+  focusEmpty: ["Focus on one project","Nothing is hidden until a project is picked — and the popup says so."]
+};
+
+function render(st){
+  const mode = st.mode, fading = st.fading;
+  const rows = document.getElementById('rows');
+  const cards = document.getElementById('cards');
+  rows.innerHTML = ''; cards.innerHTML = '';
+
+  let list = CHATS.map(c => ({...c, added:false}));
+  if (mode === 'focus' && st.project) list = list.concat(EXTRA.map(c => ({...c, added:true})));
+
+  let shown = 0;
+  for (const c of list) {
+    let hide = false;
+    if (mode === 'hide')  hide = !!c.p;
+    if (mode === 'focus' && st.project) hide = c.p !== 'Thesis';
+
+    const cls = hide ? (fading ? 'fade' : 'gone') : '';
+    if (!hide) shown++;
+
+    const r = document.createElement('div');
+    r.className = 'row ' + cls + (c.added ? ' add' : '');
+    r.innerHTML = '<i class="d"></i>' + c.t;
+    rows.appendChild(r);
+
+    const k = document.createElement('div');
+    k.className = 'card ' + cls;
+    k.innerHTML = '<div class="t">' + c.t + '</div><div class="m">Last message ' + c.ago +
+                  (c.p ? ' in <em>' + c.p + '</em>' : '') + '</div>';
+    cards.appendChild(k);
+  }
+  document.getElementById('cnt').textContent = fading ? list.length : shown;
+
+  document.getElementById('selv').innerHTML = LABEL[mode];
+  document.getElementById('hint').textContent = HINTS[mode];
+  document.getElementById('sel').className = 'sel' + (st.open ? ' hot' : '');
+  document.getElementById('prow').style.display = (mode === 'focus') ? 'block' : 'none';
+  document.getElementById('pv').textContent = st.project ? 'Thesis' : 'Select a project…';
+  document.getElementById('pstat').style.display = st.project ? 'none' : 'block';
+
+  const ob = document.getElementById('optbox');
+  ob.innerHTML = '';
+  if (st.open) {
+    const box = document.createElement('div');
+    box.className = 'opts';
+    for (const m of ['off','hide','focus']) {
+      const o = document.createElement('div');
+      o.className = 'opt' + (m === mode ? ' on' : '') + (m === st.hl ? ' hl' : '');
+      o.setAttribute('data-m', m);
+      o.innerHTML = LABEL[m];
+      box.appendChild(o);
+    }
+    ob.appendChild(box);
+  }
+
+  const capKey = (mode === 'focus' && !st.project) ? 'focusEmpty' : mode;
+  document.getElementById('capk').textContent = CAP[capKey][0];
+  document.getElementById('capt').textContent = CAP[capKey][1];
+
+  // Cursor targets are measured, never hardcoded — the dropdown shifts the
+  // project row down, so fixed coordinates drift off the controls.
+  const [cx, cy] = pointAt(st.at);
+  const cur = document.getElementById('cur');
+  cur.style.left = cx + 'px';
+  cur.style.top  = cy + 'px';
+  const ring = document.getElementById('ring');
+  ring.style.left = cx + 'px';
+  ring.style.top  = cy + 'px';
+  ring.className = st.click ? 'pulse' : '';
+}
+
+function pointAt(at){
+  if (Array.isArray(at)) return at;
+  let el = null;
+  if (at === 'sel')  el = document.getElementById('sel');
+  else if (at === 'psel') el = document.querySelector('#prow .sel');
+  else if (at && at.indexOf('opt:') === 0)
+    el = document.querySelector('.opt[data-m="' + at.slice(4) + '"]');
+  if (!el) return [900, 470];
+  const r = el.getBoundingClientRect();
+  return [Math.round(r.left + 30), Math.round(r.top + r.height / 2 - 3)];
+}
+
+const IDLE = [880, 470], DRIFT = [800, 330];
+
+// One sequence per mode, each standing on its own from the Off state so the
+// README can drop it in beside that mode's description.
+const SEQS = {
+  hide: [
+    {mode:'off', at:IDLE, hold:3},
+    {mode:'off', at:[840, 260]},
+    {mode:'off', at:'sel'},
+    {mode:'off', at:'sel', click:true},
+    {mode:'off', open:true, at:'sel'},
+    {mode:'off', open:true, hl:'hide', at:'opt:hide'},
+    {mode:'off', open:true, hl:'hide', at:'opt:hide', click:true},
+    {mode:'hide', fading:true, at:'opt:hide'},
+    {mode:'hide', at:DRIFT},
+    {mode:'hide', at:IDLE, hold:6},
+  ],
+  focus: [
+    {mode:'off', at:IDLE, hold:3},
+    {mode:'off', at:'sel'},
+    {mode:'off', at:'sel', click:true},
+    {mode:'off', open:true, at:'sel'},
+    {mode:'off', open:true, hl:'focus', at:'opt:focus'},
+    {mode:'off', open:true, hl:'focus', at:'opt:focus', click:true},
+    // armed with no project: nothing hides, and the popup says why
+    {mode:'focus', at:'opt:focus', hold:3},
+    {mode:'focus', at:'psel'},
+    {mode:'focus', at:'psel', click:true},
+    {mode:'focus', project:true, fading:true, at:'psel'},
+    {mode:'focus', project:true, at:DRIFT},
+    {mode:'focus', project:true, at:IDLE, hold:6},
+  ],
+};
+
+function setFrame(seq, i){
+  const f = SEQS[seq][i];
+  render({
+    mode: f.mode, open: !!f.open, hl: f.hl || null, project: !!f.project,
+    fading: !!f.fading, click: !!f.click, at: f.at
+  });
+}
+window.SEQS_META = Object.keys(SEQS).map(k => ({
+  name: k, count: SEQS[k].length, holds: SEQS[k].map(f => f.hold || 1)
+}));
+setFrame('hide', 0);
+</script>
+</body>
+</html>

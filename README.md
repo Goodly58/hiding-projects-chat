@@ -2,19 +2,21 @@
 
 Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Works in Firefox and Chrome.
 
-![Hide project chats: the sidebar before and after, with project chats filtered out](docs/hide-project-chats.png)
-
 ## Modes
 
-- **Off** — show everything (extension paused)
-- **Hide project chats** — conversations that belong to a Project are hidden from the main sidebar; only standalone chats stay visible *(default)*
-- **Focus on one project** — show only the chats from a single project you pick, and hide everything else
+**Off** — show everything, extension paused.
+
+**Hide project chats** *(default)* — conversations that belong to a Project are hidden from the main sidebar; only standalone chats stay visible.
+
+![Picking "Hide project chats" in the popup: project chats disappear from the sidebar and the chat history](docs/demo-hide.gif)
+
+**Focus on one project** — show only the chats from a single project you pick, and hide everything else.
+
+![Picking "Focus on one project" and choosing a project: only that project's chats remain, including ones the sidebar never rendered](docs/demo-focus.gif)
 
 Project chats remain fully accessible from inside each Project page — they're only filtered out of the main sidebar list.
 
-![Focus on one project: only the selected project's chats remain, including ones the sidebar had not rendered](docs/focus-on-one-project.png)
-
-<sub>Illustrations, not screenshots — chat and project names are made up. Regenerate them from [`docs/demo.html`](docs/demo.html).</sub>
+<sub>Demos are illustrations, not recordings — chat and project names are made up. Regenerate with [`docs/make_gif.py`](docs/make_gif.py) from [`docs/anim.html`](docs/anim.html).</sub>
 
 ## Install
 
