@@ -41,6 +41,8 @@ The extension stays loaded until Firefox restarts.
 
 `content.js` queries claude.ai's own API (`/api/organizations/{id}/chat_conversations` and `/api/organizations/{id}/projects`) with the user's signed-in session, then hides matching chat rows with `style.display = 'none'` — sidebar rows are matched by their `data-row-key="chat:{uuid}"` attribute, and list pages (Chats and tasks) by their `/chat/{uuid}` links. A MutationObserver keeps hidden chats hidden as the UI updates.
 
+Focus mode also *adds* rows: the sidebar only renders a few recents, so hiding alone would leave it empty. It clones a real sidebar row for each of the project's chats and rewrites the title and `/chat/{uuid}` link. Cowork sessions belong to no project, so focus mode hides those too.
+
 No data leaves your browser. The only thing stored is your mode choice and selected project UUID, via `storage.sync`.
 
 ## Files

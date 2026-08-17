@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hiding Projects Chat",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Declutter Claude's sidebar — hide project chats, or focus on a single project.",
   "browser_specific_settings": {
     "gecko": {

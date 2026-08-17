@@ -16,12 +16,17 @@
   const STORAGE_KEYS = ['mode', 'focusProjectId', 'hideProjectChats'];
   const REFRESH_MS = 60_000;
   const CHAT_ROW_SELECTOR = '[data-row-key^="chat:"]';
+  const COWORK_ROW_SELECTOR = '[data-row-key^="cowork:"]';
   const CHAT_LINK_SELECTOR = 'a[href^="/chat/"]';
   const HIDDEN_ATTR = 'data-cp-hidden';
+  const INJECTED_ATTR = 'data-cp-injected';
+  // Claude's sidebar only renders a handful of recents, so focus mode has to
+  // add the project's own chats — hiding alone just empties the sidebar.
+  const MAX_INJECTED = 25;
 
   class ProjectChatDeclutter {
     constructor() {
-      this.chatToProject = new Map(); // chatUuid → projectUuid | null
+      this.chats = new Map(); // chatUuid → { project, name, updatedAt }
       this.orgId = null;
       this.settings = { mode: 'hideProjects', focusProjectId: null };
       this.sweepQueued = false;
@@ -100,9 +105,14 @@
         ]);
         const next = new Map();
         for (const c of [...unstarred, ...starred]) {
-          if (c?.uuid) next.set(c.uuid, c.project_uuid || null);
+          if (!c?.uuid) continue;
+          next.set(c.uuid, {
+            project: c.project_uuid || null,
+            name: c.name || 'Untitled',
+            updatedAt: c.updated_at || c.created_at || '',
+          });
         }
-        this.chatToProject = next;
+        this.chats = next;
       } catch { /* transient */ }
     }
 
@@ -123,7 +133,7 @@
 
     shouldHide(chatUuid) {
       const { mode, focusProjectId } = this.settings;
-      const projectId = this.chatToProject.get(chatUuid) ?? null;
+      const projectId = this.chats.get(chatUuid)?.project ?? null;
       if (mode === 'hideProjects') return projectId !== null;
       if (mode === 'focusProject' && focusProjectId) {
         return projectId !== focusProjectId;
@@ -142,6 +152,82 @@
       }
     }
 
+    // Sidebar rows Claude never rendered. Cloning a real row inherits its
+    // styling, and the clone's <a href> navigates on its own — React's
+    // handlers don't survive cloneNode, but a plain link doesn't need them.
+    buildRow(template, uuid, name) {
+      const row = template.cloneNode(true);
+      row.setAttribute('data-row-key', `chat:${uuid}`);
+      row.setAttribute(INJECTED_ATTR, '');
+      row.removeAttribute(HIDDEN_ATTR);
+      row.style.display = '';
+
+      const link = row.querySelector('a');
+      if (link) {
+        link.setAttribute('href', `/chat/${uuid}`);
+        // Row menus ("...") are React-driven and dead on a clone — drop them.
+        for (const b of row.querySelectorAll('button')) b.remove();
+      }
+
+      // Replace the template's title text, wherever it sits in the subtree.
+      const scope = link || row;
+      const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+      let first = null, node;
+      while ((node = walker.nextNode())) {
+        if (!node.nodeValue.trim()) continue;
+        if (first) node.nodeValue = '';
+        else { node.nodeValue = name; first = node; }
+      }
+      if (!first) scope.textContent = name;
+
+      return row;
+    }
+
+    injectFocusRows() {
+      const { mode, focusProjectId } = this.settings;
+      const injected = document.querySelectorAll(`[${INJECTED_ATTR}]`);
+
+      if (mode !== 'focusProject' || !focusProjectId) {
+        for (const el of injected) el.remove();
+        return;
+      }
+
+      // Claude's own rows. If one is already there, don't duplicate it.
+      const real = [...document.querySelectorAll(CHAT_ROW_SELECTOR)]
+        .filter(el => !el.hasAttribute(INJECTED_ATTR));
+      const template = real[0];
+      if (!template) return; // sidebar not rendered yet
+
+      const realIds = new Set(
+        real.map(el => el.getAttribute('data-row-key').slice('chat:'.length))
+      );
+
+      const wanted = [...this.chats.entries()]
+        .filter(([uuid, meta]) => meta.project === focusProjectId && !realIds.has(uuid))
+        .sort((a, b) => String(b[1].updatedAt).localeCompare(String(a[1].updatedAt)))
+        .slice(0, MAX_INJECTED);
+      const wantedIds = new Set(wanted.map(([uuid]) => uuid));
+
+      const alreadyInjected = new Set();
+      for (const el of injected) {
+        const uuid = el.getAttribute('data-row-key').slice('chat:'.length);
+        if (wantedIds.has(uuid)) alreadyInjected.add(uuid);
+        else el.remove(); // stale: renamed, moved project, or now rendered by Claude
+      }
+
+      const anchor = real[real.length - 1];
+      const container = anchor.parentElement;
+      if (!container) return;
+
+      let after = anchor;
+      for (const [uuid, meta] of wanted) {
+        if (alreadyInjected.has(uuid)) continue;
+        const row = this.buildRow(template, uuid, meta.name);
+        after.insertAdjacentElement('afterend', row);
+        after = row;
+      }
+    }
+
     sweep() {
       // A Project page's own chat list must remain fully visible; the global
       // sidebar rows are still filtered there. Project pages live at
@@ -154,13 +240,24 @@
         this.applyVisibility(row, this.shouldHide(id));
       }
 
-      // 2. Link-based lists: Recents page tables (and any legacy markup).
+      // 2. Cowork sessions belong to no project, so focus mode hides them too.
+      // They dominate the sidebar, and leaving them would drown the project's
+      // own chats. Other modes leave them alone.
+      const focusing = this.settings.mode === 'focusProject'
+                    && !!this.settings.focusProjectId;
+      for (const row of document.querySelectorAll(COWORK_ROW_SELECTOR)) {
+        this.applyVisibility(row, focusing);
+      }
+
+      // 3. Link-based lists: Recents page tables (and any legacy markup).
       for (const link of document.querySelectorAll(CHAT_LINK_SELECTOR)) {
         const row = link.closest('tr, li');
         if (!row) continue;
         const id = link.getAttribute('href').slice('/chat/'.length);
         this.applyVisibility(row, !onProjectPage && this.shouldHide(id));
       }
+
+      this.injectFocusRows();
     }
   }
 
