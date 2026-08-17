@@ -1,6 +1,6 @@
 # Hiding Projects Chat
 
-Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Works in Firefox and in Chrome / Chromium-based browsers (Chrome, Edge, Brave, ungoogled-chromium).
+Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Works in Firefox and Chrome.
 
 ## Modes
 
@@ -16,22 +16,17 @@ Project chats remain fully accessible from inside each Project page — they're 
 
 https://addons.mozilla.org/en-US/firefox/addon/hiding-claude-projects-chat/
 
-### Chrome / Chromium (Edge, Brave, ungoogled-chromium)
+### Chrome (also Edge, Brave)
 
-There's no Chrome Web Store listing, so install it from source — it takes about a minute:
+Not on the Chrome Web Store — install from source:
 
-1. Download this repo (**Code → Download ZIP**, then unzip) or `git clone` it
-2. Put the folder somewhere permanent — Chrome loads it from that path every launch, so don't leave it in Downloads or a temp folder
-3. Open `chrome://extensions` (`edge://extensions` on Edge)
-4. Turn on **Developer mode**, top right
-5. Click **Load unpacked** and select the folder (the one containing `manifest.json` — not the file itself)
+1. [Download the ZIP](https://github.com/Goodly58/hiding-projects-chat/archive/refs/heads/main.zip) and unzip it somewhere permanent (**not** Downloads — Chrome loads it from that folder at every launch)
+2. Open `chrome://extensions` and turn on **Developer mode**
+3. Click **Load unpacked** and pick the unzipped folder
 
-The extension stays installed across restarts. Notes:
+To update, re-download and hit **Reload** on the extension card.
 
-- **Don't move or delete the folder.** Chrome reloads it from that path on every start; moving it uninstalls the extension and resets your saved mode.
-- **No auto-updates.** To update: `git pull` (or re-download), then click **Reload** on `chrome://extensions`.
-- Chrome logs an `Unrecognized manifest key 'browser_specific_settings'` warning. That's the Firefox-only block; it's harmless and the extension runs normally.
-- Vanilla Chrome shows a "disable developer mode extensions" prompt on startup. Keep the extension enabled and it stays working; Edge and most other Chromium forks don't prompt at all.
+Chrome warns `Unrecognized manifest key 'browser_specific_settings'`. Harmless — that key is Firefox-only.
 
 ### Firefox — temporary (for development)
 
