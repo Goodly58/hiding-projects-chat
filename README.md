@@ -2,6 +2,8 @@
 
 Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Works in Firefox and Chrome.
 
+![Hide project chats: the sidebar before and after, with project chats filtered out](docs/hide-project-chats.png)
+
 ## Modes
 
 - **Off** — show everything (extension paused)
@@ -9,6 +11,10 @@ Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Wo
 - **Focus on one project** — show only the chats from a single project you pick, and hide everything else
 
 Project chats remain fully accessible from inside each Project page — they're only filtered out of the main sidebar list.
+
+![Focus on one project: only the selected project's chats remain, including ones the sidebar had not rendered](docs/focus-on-one-project.png)
+
+<sub>Illustrations, not screenshots — chat and project names are made up. Regenerate them from [`docs/demo.html`](docs/demo.html).</sub>
 
 ## Install
 
