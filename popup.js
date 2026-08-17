@@ -64,7 +64,6 @@
       return;
     }
     projectEl.disabled = false;
-    statusEl.textContent = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = 'Select a project…';
@@ -77,6 +76,15 @@
       projectEl.appendChild(opt);
     }
     if (!selected) placeholder.selected = true;
+    updateSelectionStatus();
+  }
+
+  // Focus mode with no project picked filters nothing — say so, or it just
+  // looks like the extension is broken.
+  function updateSelectionStatus() {
+    statusEl.textContent = projectEl.value
+      ? ''
+      : 'Pick a project — nothing is hidden until you do.';
   }
 
   function applyModeUI(mode) {
@@ -85,6 +93,7 @@
       projectRow.classList.remove('hidden');
     } else {
       projectRow.classList.add('hidden');
+      statusEl.textContent = '';
     }
   }
 
@@ -100,13 +109,15 @@
       const newMode = modeEl.value;
       applyModeUI(newMode);
       await setStorage({ mode: newMode });
-      if (newMode === 'focusProject' && projectEl.options.length <= 1) {
-        loadProjects(stored.focusProjectId);
+      if (newMode === 'focusProject') {
+        if (projectEl.options.length <= 1) loadProjects(stored.focusProjectId);
+        else updateSelectionStatus();
       }
     });
 
     projectEl.addEventListener('change', async () => {
       await setStorage({ focusProjectId: projectEl.value || null });
+      updateSelectionStatus();
     });
 
     if (mode === 'focusProject') {
