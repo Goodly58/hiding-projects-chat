@@ -16,8 +16,6 @@ Browser extension that declutters the [claude.ai](https://claude.ai) sidebar. Wo
 
 Project chats remain fully accessible from inside each Project page — they're only filtered out of the main sidebar list.
 
-<sub>Demos are illustrations, not recordings — chat and project names are made up. Regenerate with [`docs/make_gif.py`](docs/make_gif.py) from [`docs/anim.html`](docs/anim.html).</sub>
-
 ## Install
 
 ### Firefox — from Firefox Add-ons (recommended)
