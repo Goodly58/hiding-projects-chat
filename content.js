@@ -18,6 +18,7 @@
   const CHAT_ROW_SELECTOR = '[data-row-key^="chat:"]';
   const COWORK_ROW_SELECTOR = '[data-row-key^="cowork:"]';
   const CHAT_LINK_SELECTOR = 'a[href^="/chat/"]';
+  const COWORK_LINK_SELECTOR = 'a[href^="/cowork/"]';
   const HIDDEN_ATTR = 'data-cp-hidden';
   const INJECTED_ATTR = 'data-cp-injected';
   // Claude's sidebar only renders a handful of recents, so focus mode has to
@@ -255,6 +256,14 @@
         if (!row) continue;
         const id = link.getAttribute('href').slice('/chat/'.length);
         this.applyVisibility(row, !onProjectPage && this.shouldHide(id));
+      }
+
+      // 4. Cowork rows on list pages (/chats) are table rows reached by their
+      // /cowork/ link, not the sidebar's data-row-key.
+      for (const link of document.querySelectorAll(COWORK_LINK_SELECTOR)) {
+        const row = link.closest('tr, li');
+        if (!row) continue;
+        this.applyVisibility(row, !onProjectPage && focusing);
       }
 
       this.injectFocusRows();
